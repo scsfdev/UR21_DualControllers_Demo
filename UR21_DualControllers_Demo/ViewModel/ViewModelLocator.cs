@@ -9,20 +9,13 @@
   DataContext="{Binding Source={StaticResource Locator}, Path=ViewModelName}"
 */
 
+using CommonServiceLocator;
 using GalaSoft.MvvmLight;
 using GalaSoft.MvvmLight.Ioc;
-using Microsoft.Practices.ServiceLocation;
 using UR21_DualControllers_Demo.Model;
 
 namespace UR21_DualControllers_Demo.ViewModel
 {
-    /// <summary>
-    /// This class contains static references to all the view models in the
-    /// application and provides an entry point for the bindings.
-    /// <para>
-    /// See http://www.mvvmlight.net
-    /// </para>
-    /// </summary>
     public class ViewModelLocator
     {
         static ViewModelLocator()
@@ -39,6 +32,10 @@ namespace UR21_DualControllers_Demo.ViewModel
             }
 
             SimpleIoc.Default.Register<MainViewModel>();
+
+            SimpleIoc.Default.Register(() => new SettingViewModel(1),"1");
+
+            //SimpleIoc.Default.Register<ControllerViewModel>();
         }
 
         /// <summary>
@@ -54,6 +51,47 @@ namespace UR21_DualControllers_Demo.ViewModel
                 return ServiceLocator.Current.GetInstance<MainViewModel>();
             }
         }
+
+        public ControllerViewModel ControllerVM1
+        {
+            get
+            {
+                return new ControllerViewModel(1);
+            }
+        }
+
+        public ControllerViewModel ControllerVM2
+        {
+            get
+            {
+                return new ControllerViewModel(2);
+            }
+        }
+
+        public SettingViewModel SettingVM_Design
+        {
+            get
+            {
+                return new SettingViewModel();
+            }
+        }
+
+        public SettingViewModel SettingVM1
+        {
+            get
+            {
+                return ServiceLocator.Current.GetInstance<SettingViewModel>("1");
+            }
+        }
+
+        public SettingViewModel SettingVM2
+        {
+            get
+            {
+                return new SettingViewModel(2);
+            }
+        }
+
 
         /// <summary>
         /// Cleans up all the resources.
