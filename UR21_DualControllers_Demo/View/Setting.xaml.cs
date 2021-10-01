@@ -16,7 +16,8 @@ namespace UR21_DualControllers_Demo.View
 
         private void Button_IsEnabledChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
         {
-            Messenger.Default.Send(contentBinding.Content.ToString().ToUpper().Replace("CONTROLLER ", "") + "," + (sender as Button).IsEnabled, MsgType.CON_STATUS);
+            if(groupMain.IsEnabled)
+                Messenger.Default.Send(contentBinding.Content.ToString().ToUpper().Replace("CONTROLLER ", "") + "," + (sender as Button).IsEnabled, MsgType.CON_STATUS);
         }
     }
 }

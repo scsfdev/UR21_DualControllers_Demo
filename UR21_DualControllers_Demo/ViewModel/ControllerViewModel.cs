@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.IO;
 using UR21_DualControllers_Demo.Model;
 
 namespace UR21_DualControllers_Demo.ViewModel
@@ -22,11 +23,40 @@ namespace UR21_DualControllers_Demo.ViewModel
         {
             Messenger.Default.Register<ParcelSetting>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), RfidAction);
             Messenger.Default.Register<bool>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), ClearList);
+            Messenger.Default.Register<int>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), ExportList);
+
             ur = new Ur21();
             ur.OnTagRead += Ur_OnTagRead;
 
             ControllerNo = "Controller " + controllerNo + " scan data";
             this.controllerNo = controllerNo;
+        }
+
+        private void ExportList(int controllerNo)
+        {
+            string parentDir = @"C:\Temp\UR21Dual_Demo";
+            if (!Directory.Exists(parentDir))
+                Directory.CreateDirectory(parentDir);
+
+            string todayDir = Path.Combine(parentDir, DateTime.Now.ToString("yyMMdd"));
+            if (!Directory.Exists(todayDir))
+                Directory.CreateDirectory(todayDir);
+
+            string fileName = Path.Combine(todayDir, "C" + controllerNo + "_" + DateTime.Now.ToString("HHmmss") + ".csv");
+
+            try
+            {
+                new MyHelper().ExportToCSV(fileName, tagList.ToList());
+                // TODO: Send success status message only. No need to send message box. This is to avoid msgbox pop up while Controller 1 or 2 is still running at the same time.
+                Messenger.Default.Send("Info: Successfully exported out Controller " + controllerNo + " data to " + todayDir, MsgType.MAIN_VM);
+            }
+            catch (Exception e)
+            {
+                ErrMsg errMsg = new ErrMsg();
+                errMsg.StatusMsg = "Error: Controller " + controllerNo + " failed to export data.";
+                errMsg.BoxMsg = "Controller: " + controllerNo + " failed to export data." + Environment.NewLine + "Details: " + e.Message;
+                Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+            }            
         }
 
         private void ClearList(bool clearList)
@@ -117,11 +147,17 @@ namespace UR21_DualControllers_Demo.ViewModel
                 if (parcel.Start)
                 {
                     TagList = new ObservableCollection<Tag>();
-                    ur.StartRead(byte.Parse(parcel.Com.ToString()), parcel.No);
+
+                    if (parcel.ReadUii)
+                        ur.StartReadUii(byte.Parse(parcel.Com.ToString()), parcel.No);
+                    else if (parcel.ReadContinuous)
+                        ur.StartReadContinuous(byte.Parse(parcel.Com.ToString()), parcel.No);
+                    else
+                        ur.StartReadMemory(byte.Parse(parcel.Com.ToString()), parcel.No);
                 }
                 else
                 {
-                    ur.StopReading();
+                    ur.StopReading(parcel.No);
                     if (tagList != null && tagList.Count > 0)
                         Messenger.Default.Send(parcel.No + ",T", MsgType.MAIN_EXPORT);
                     else

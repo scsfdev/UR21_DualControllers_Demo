@@ -147,6 +147,12 @@ namespace UR21_DualControllers_Demo.Model
         public int Antenna { get; set; }
 
         public bool Start { get; set; }
+
+        public bool ReadUii { get; set; }
+
+        public bool ReadContinuous { get; set; }
+
+        public bool ReadMemory { get; set; }
     }
 
 

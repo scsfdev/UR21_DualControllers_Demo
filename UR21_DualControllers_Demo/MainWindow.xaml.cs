@@ -44,6 +44,12 @@ namespace UR21_DualControllers_Demo
                 (sender as TextBlock).Foreground = Brushes.White;
                 (sender as TextBlock).Background = Brushes.Red;
             }
+            else if (strMsg.ToUpper().StartsWith("INFO"))
+            {
+                (sender as TextBlock).FontWeight = FontWeights.Bold;
+                (sender as TextBlock).Foreground = Brushes.DarkBlue;
+                (sender as TextBlock).Background = Brushes.LightBlue;
+            }
             else
             {
                 (sender as TextBlock).Foreground = Brushes.Black;

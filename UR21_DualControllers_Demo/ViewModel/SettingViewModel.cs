@@ -19,10 +19,17 @@ namespace UR21_DualControllers_Demo.ViewModel
         {
             Init_View();
             Messenger.Default.Register<ParcelSetting>(this, MsgType.SETTING_VM + controllerNo.ToString(), LoadSetting);
-            
+            Messenger.Default.Register<bool>(this, MsgType.SETTING_VM + controllerNo.ToString(), RfidinAction);
+
+
             ControllerNo = "Controller " + controllerNo + " Setting";
 
             CmdUpdate = new RelayCommand(UpdateSetting);
+        }
+
+        private void RfidinAction(bool isReady)
+        {
+            UpdateReady = isReady;
         }
 
         private string GetComPort()
@@ -61,6 +68,16 @@ namespace UR21_DualControllers_Demo.ViewModel
             }
 
         }
+
+
+        private bool _updateReady;
+
+        public bool UpdateReady
+        {
+            get { return _updateReady; }
+            set { Set(ref _updateReady, value); }
+        }
+
 
 
         private void UpdateSetting()

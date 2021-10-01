@@ -19,7 +19,7 @@
 
     <Grid>
         <ContentControl x:Name="contentBinding" Content="{Binding ElementName=lblControllerNo,Path=Content}" Visibility="Collapsed" />
-        <GroupBox Margin="10,0,10,10" BorderBrush="Gray" BorderThickness="1" >
+        <GroupBox x:Name="groupMain" Margin="10,0,10,10" BorderBrush="Gray" BorderThickness="1" IsEnabled="{Binding UpdateReady}">
             <GroupBox.Header>
                 <Label x:Name="lblControllerNo" Content="{Binding ControllerNo}" FontWeight="Bold"/>
             </GroupBox.Header>
@@ -72,7 +72,7 @@
                     <RadioButton Content="1 &amp; 2" IsChecked="{Binding Ant1n2Checked}" />
                 </StackPanel>
 
-                <Button Content="Update" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="Auto" Margin="3,0,0,0"
+                <Button Content="Update" Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Left" Height="Auto" Margin="3,0,0,0" 
                             Command="{Binding CmdUpdate}" IsEnabledChanged="Button_IsEnabledChanged">
                     <Button.Style>
                         <Style TargetType="{x:Type Button}" BasedOn="{StaticResource GeneralControl}">

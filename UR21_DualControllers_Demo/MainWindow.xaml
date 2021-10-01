@@ -41,12 +41,12 @@
         <v:Controller Margin="10" Grid.Row="1" Grid.Column="0" DataContext="{Binding ControllerVM2,Source={StaticResource Locator}}"  />
 
         <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="1" Margin="0,50,0,0">
-            <RadioButton Content="Read Tag (ReadUii)" />
-            <RadioButton Content="Continuous Read (ContinuousRead)" />
-            <RadioButton Content="Read Memory Area (StartTagComm, GetTagCommResult)" />
+            <RadioButton Content="Read Tag (ReadUii)" IsChecked="{Binding ReadUii}"/>
+            <RadioButton Content="Continuous Read (ContinuousRead)" IsChecked="{Binding ReadContinuous}" />
+            <RadioButton Content="Read Memory Area (StartTagComm, GetTagCommResult)" IsChecked="{Binding ReadMemory}" />
         </StackPanel>
-        
-        
+
+
         <Grid Grid.RowSpan="2" Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="150"/>
@@ -177,8 +177,7 @@
 
                             <Button Content="SAVE&#xa;RESULT" Style="{StaticResource BtnStyle}" 
                                     TextBlock.TextAlignment="Center" HorizontalAlignment="Left" IsEnabled="{Binding C2ExportReady}"
-                                Command="{Binding CmdRfidAction}" CommandParameter="C2SAVE" Margin="5">
-                            </Button>
+                                Command="{Binding CmdRfidAction}" CommandParameter="C2SAVE" Margin="5"/>
                         </StackPanel>
                     </GroupBox>
 

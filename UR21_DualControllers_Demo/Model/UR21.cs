@@ -470,10 +470,12 @@ namespace UR21_DualControllers_Demo.Model
         public event TagHandler OnTagRead;
         
         Thread t1;
+        Thread t2;
         byte bytePort = 0;
         int controllerNo = 1;
 
-        bool bTrue = false;
+        bool b1True = false;
+        bool b2True = false;
 
         public Ur21()
         {
@@ -481,31 +483,187 @@ namespace UR21_DualControllers_Demo.Model
         }
 
 
-        public bool StartRead(byte bytePort, int controllerNo)
+        public bool StartReadUii(byte bytePort, int controllerNo)
         {
             this.bytePort = bytePort;
             this.controllerNo = controllerNo;
 
-            t1 = new Thread(ReadTag);
-            t1.Start();
-
+            if (controllerNo == 1)
+            {
+                t1 = new Thread(Read1Tag);
+                t1.Start();
+            }
+            else
+            {
+                t2 = new Thread(Read2Tag);
+                t2.Start();
+            }
             return true;
         }
 
-        internal void StopReading()
+        public bool StartReadContinuous(byte bytePort, int controllerNo)
         {
-            bTrue = false;
-            if (t1 != null && t1.IsAlive)
-                t1.Abort();
+            this.bytePort = bytePort;
+            this.controllerNo = controllerNo;
+
+            if (controllerNo == 1)
+            {
+                t1 = new Thread(Read1TagContinuous);
+                t1.Start();
+            }
+            else
+            {
+                t2 = new Thread(Read2TagContinuous);
+                t2.Start();
+            }
+            return true;
+        }
+
+        public bool StartReadMemory(byte bytePort, int controllerNo)
+        {
+            this.bytePort = bytePort;
+            this.controllerNo = controllerNo;
+
+            if (controllerNo == 1)
+            {
+                t1 = new Thread(Read1Tag);
+                t1.Start();
+            }
+            else
+            {
+                t2 = new Thread(Read2Tag);
+                t2.Start();
+            }
+            return true;
         }
 
 
-        public void ReadTag()
+        internal void StopReading(int controllerNo)
+        {
+           // bTrue = false;
+
+            if(controllerNo == 1)
+            {
+                b1True = false;
+                if (t1 != null && t1.IsAlive)
+                    t1.Abort();
+            }
+            else
+            {
+                b2True = false;
+                if (t2 != null && t2.IsAlive)
+                    t2.Abort();
+
+            }
+           
+        }
+
+
+        //public void ReadTag()
+        //{
+        //    try
+        //    {
+        //        // int iCounter = 0;
+        //        bTrue = true;
+        //        uint iReturn;
+        //        uint iReadCount;
+        //        uint iRemainCount;
+        //        uint iBufCount = 500;
+        //        int i = 0;
+
+        //        // More info on Marshal class >> https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netframework-4.5.1
+        //        // More info on IntPtr >> https://docs.microsoft.com/en-us/dotnet/api/system.intptr?view=netframework-4.5.1
+
+        //        // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
+        //        IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
+
+        //        iReturn = controllerNo == 1 ? Uts1Open(bytePort) : Uts2Open(bytePort);
+        //        if (iReturn != 0)
+        //            throw new Exception("Open port error-" + iReturn.ToString("X2"));
+
+
+        //        iReturn = controllerNo == 1 ? Uts1Abort(bytePort) : Uts2Abort(bytePort);
+        //        if (iReturn != 0)
+        //            throw new Exception("Abort port error-" + iReturn.ToString("X2"));
+
+
+        //        while (bTrue)
+        //        {
+        //            iReturn = controllerNo == 1 ? Uts1ReadUii(bytePort) : Uts2ReadUii(bytePort);
+        //            if (iReturn != 0)        // There is an error, but keep going.
+        //                continue;
+
+        //            do
+        //            {
+        //                if(controllerNo == 1)
+        //                    iReturn = Uts1GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
+        //                else
+        //                    iReturn = Uts2GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
+
+        //                if (iReturn == 1)
+        //                {
+        //                    iRemainCount = 1;
+        //                    continue;
+        //                }
+
+        //                for (i = 0; i < iReadCount; i++)
+        //                {
+        //                    TagArgs e = new TagArgs();
+
+        //                    // IntPtr to Structure >> https://stackoverflow.com/a/27680642/770989
+        //                    ud = (UiiData)Marshal.PtrToStructure(uiiBuf + (sizeof(UiiData) * i), typeof(UiiData));
+        //                    //                            ud = (UiiData)Marshal.PtrToStructure((IntPtr)((uint)uiiBuf + (sizeof(UiiData) * i)), typeof(UiiData));
+
+        //                    // More info on fixed >> https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/fixed-statement
+        //                    // Reference from here >> https://docs.microsoft.com/en-us/dotnet/csharp/misc/cs1666
+        //                    // If we do not use fixed, it will throw CS1666 error.
+        //                    fixed (UiiData* uf = &ud)
+        //                    {
+        //                        byte[] bUii = new byte[uf->length];
+
+
+        //                        // How to get IntPtr from byte[] >> https://stackoverflow.com/questions/537573/how-to-get-intptr-from-byte-in-c-sharp
+        //                        // Another example >> https://stackoverflow.com/a/27680642/770989
+        //                        Marshal.Copy((IntPtr)uf->uii, bUii, 0, (int)uf->length);
+
+        //                        e.Uii = BitConverter.ToString(bUii).Replace("-", "");
+        //                    }
+
+        //                    //if (!OnTagRead.Equals(null))
+        //                    OnTagRead(this, e);
+                            
+        //                }
+        //            }
+        //            while ((iRemainCount > 0) && bTrue);
+        //        }
+
+        //        iReturn = controllerNo == 1 ? Uts1Close(bytePort) : Uts2Close(bytePort);
+        //        if (iReturn > 0)
+        //            throw new Exception("Close port error-" + iReturn.ToString("X2"));
+        //    }
+        //    catch (ThreadAbortException)
+        //    {
+        //        if(controllerNo == 1)
+        //            Uts1Close(bytePort);
+        //        else
+        //            Uts2Close(bytePort);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        ErrMsg errMsg = new ErrMsg();
+        //        errMsg.StatusMsg = "Error: An error occured while running UR21 Api.";
+        //        errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
+        //        Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+        //    }
+        //}
+
+
+        public void Read1Tag()
         {
             try
             {
-                // int iCounter = 0;
-                bTrue = true;
+                b1True = true;
+
                 uint iReturn;
                 uint iReadCount;
                 uint iRemainCount;
@@ -518,28 +676,25 @@ namespace UR21_DualControllers_Demo.Model
                 // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
                 IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
 
-                iReturn = controllerNo == 1 ? Uts1Open(bytePort) : Uts2Open(bytePort);
+                iReturn = Uts1Open(bytePort);
                 if (iReturn != 0)
                     throw new Exception("Open port error-" + iReturn.ToString("X2"));
 
 
-                iReturn = controllerNo == 1 ? Uts1Abort(bytePort) : Uts2Abort(bytePort);
+                iReturn = Uts1Abort(bytePort);
                 if (iReturn != 0)
                     throw new Exception("Abort port error-" + iReturn.ToString("X2"));
 
 
-                while (bTrue)
+                while (b1True)
                 {
-                    iReturn = controllerNo == 1 ? Uts1ReadUii(bytePort) : Uts2ReadUii(bytePort);
+                    iReturn = Uts1ReadUii(bytePort);
                     if (iReturn != 0)        // There is an error, but keep going.
                         continue;
 
                     do
                     {
-                        if(controllerNo == 1)
-                            iReturn = Uts1GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
-                        else
-                            iReturn = Uts2GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
+                        iReturn = Uts1GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
 
                         if (iReturn == 1)
                         {
@@ -572,22 +727,19 @@ namespace UR21_DualControllers_Demo.Model
 
                             //if (!OnTagRead.Equals(null))
                             OnTagRead(this, e);
-                            
+
                         }
                     }
-                    while ((iRemainCount > 0) && bTrue);
+                    while ((iRemainCount > 0) && b1True);
                 }
 
-                iReturn = controllerNo == 1 ? Uts1Close(bytePort) : Uts2Close(bytePort);
+                iReturn = Uts1Close(bytePort);
                 if (iReturn > 0)
                     throw new Exception("Close port error-" + iReturn.ToString("X2"));
             }
             catch (ThreadAbortException)
             {
-                if(controllerNo == 1)
-                    Uts1Close(bytePort);
-                else
-                    Uts2Close(bytePort);
+                Uts1Close(bytePort);
             }
             catch (Exception e)
             {
@@ -598,5 +750,279 @@ namespace UR21_DualControllers_Demo.Model
             }
         }
 
+        public void Read2Tag()
+        {
+            try
+            {
+                b2True = true;
+
+                uint iReturn;
+                uint iReadCount;
+                uint iRemainCount;
+                uint iBufCount = 500;
+                int i = 0;
+
+                // More info on Marshal class >> https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netframework-4.5.1
+                // More info on IntPtr >> https://docs.microsoft.com/en-us/dotnet/api/system.intptr?view=netframework-4.5.1
+
+                // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
+                IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
+
+                iReturn = Uts2Open(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Open port error-" + iReturn.ToString("X2"));
+
+
+                iReturn = Uts2Abort(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Abort port error-" + iReturn.ToString("X2"));
+
+
+                while (b2True)
+                {
+                    iReturn = Uts2ReadUii(bytePort);
+                    if (iReturn != 0)        // There is an error, but keep going.
+                        continue;
+
+                    do
+                    {
+                        iReturn = Uts2GetUii(bytePort, (void*)uiiBuf, iBufCount, out iReadCount, out iRemainCount);
+
+                        if (iReturn == 1)
+                        {
+                            iRemainCount = 1;
+                            continue;
+                        }
+
+                        for (i = 0; i < iReadCount; i++)
+                        {
+                            TagArgs e = new TagArgs();
+
+                            // IntPtr to Structure >> https://stackoverflow.com/a/27680642/770989
+                            ud = (UiiData)Marshal.PtrToStructure(uiiBuf + (sizeof(UiiData) * i), typeof(UiiData));
+                            //                            ud = (UiiData)Marshal.PtrToStructure((IntPtr)((uint)uiiBuf + (sizeof(UiiData) * i)), typeof(UiiData));
+
+                            // More info on fixed >> https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/fixed-statement
+                            // Reference from here >> https://docs.microsoft.com/en-us/dotnet/csharp/misc/cs1666
+                            // If we do not use fixed, it will throw CS1666 error.
+                            fixed (UiiData* uf = &ud)
+                            {
+                                byte[] bUii = new byte[uf->length];
+
+
+                                // How to get IntPtr from byte[] >> https://stackoverflow.com/questions/537573/how-to-get-intptr-from-byte-in-c-sharp
+                                // Another example >> https://stackoverflow.com/a/27680642/770989
+                                Marshal.Copy((IntPtr)uf->uii, bUii, 0, (int)uf->length);
+
+                                e.Uii = BitConverter.ToString(bUii).Replace("-", "");
+                            }
+
+                            //if (!OnTagRead.Equals(null))
+                            OnTagRead(this, e);
+
+                        }
+                    }
+                    while ((iRemainCount > 0) && b2True);
+                }
+
+                iReturn = Uts2Close(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Close port error-" + iReturn.ToString("X2"));
+            }
+            catch (ThreadAbortException)
+            {
+                Uts2Close(bytePort);
+            }
+            catch (Exception e)
+            {
+                ErrMsg errMsg = new ErrMsg();
+                errMsg.StatusMsg = "Error: An error occured while running UR21 Api.";
+                errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
+                Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+            }
+        }
+
+
+        public void Read1TagContinuous()
+        {
+            try
+            {
+                b1True = true;
+
+                uint iReturn;
+                uint iReadCount;
+                uint iRemainCount;
+                uint iBufCount = 500;
+                int i = 0;
+
+                // More info on Marshal class >> https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netframework-4.5.1
+                // More info on IntPtr >> https://docs.microsoft.com/en-us/dotnet/api/system.intptr?view=netframework-4.5.1
+
+                // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
+                IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
+
+                iReturn = Uts1Open(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Open port error-" + iReturn.ToString("X2"));
+
+
+                //iReturn = Uts1Abort(bytePort);
+                //if (iReturn != 0)
+                //    throw new Exception("Abort port error-" + iReturn.ToString("X2"));
+
+                iReturn = Uts1StartContinuousRead(bytePort);
+                if (iReturn != 0)        // There is an error, but keep going.
+                    throw new Exception("Continuous Read error-" + iReturn.ToString("X2"));
+
+
+                while (b1True)
+                {
+                    iReturn = Uts1GetContinuousReadResult(bytePort, (void*)uiiBuf, iBufCount, out iReadCount);
+
+                    if (iReturn == 1)
+                    {
+                        iRemainCount = 1;
+                        continue;
+                    }
+
+                    for (i = 0; i < iReadCount; i++)
+                    {
+                        TagArgs e = new TagArgs();
+
+                        // IntPtr to Structure >> https://stackoverflow.com/a/27680642/770989
+                        ud = (UiiData)Marshal.PtrToStructure(uiiBuf + (sizeof(UiiData) * i), typeof(UiiData));
+                        //                            ud = (UiiData)Marshal.PtrToStructure((IntPtr)((uint)uiiBuf + (sizeof(UiiData) * i)), typeof(UiiData));
+
+                        // More info on fixed >> https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/fixed-statement
+                        // Reference from here >> https://docs.microsoft.com/en-us/dotnet/csharp/misc/cs1666
+                        // If we do not use fixed, it will throw CS1666 error.
+                        fixed (UiiData* uf = &ud)
+                        {
+                            byte[] bUii = new byte[uf->length];
+
+
+                            // How to get IntPtr from byte[] >> https://stackoverflow.com/questions/537573/how-to-get-intptr-from-byte-in-c-sharp
+                            // Another example >> https://stackoverflow.com/a/27680642/770989
+                            Marshal.Copy((IntPtr)uf->uii, bUii, 0, (int)uf->length);
+
+                            e.Uii = BitConverter.ToString(bUii).Replace("-", "");
+                        }
+
+                        //if (!OnTagRead.Equals(null))
+                        OnTagRead(this, e);
+                    }
+                }
+
+                iReturn = Uts1StopContinuousRead(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Stop Continuous Read error-" + iReturn.ToString("X2"));
+
+                iReturn = Uts1Close(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Close port error-" + iReturn.ToString("X2"));
+            }
+            catch (ThreadAbortException)
+            {
+                Uts1Close(bytePort);
+            }
+            catch (Exception e)
+            {
+                ErrMsg errMsg = new ErrMsg();
+                errMsg.StatusMsg = "Error: An error occured while running UR21 Api.";
+                errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
+                Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+            }
+        }
+
+        public void Read2TagContinuous()
+        {
+            try
+            {
+                b2True = true;
+
+                uint iReturn;
+                uint iReadCount;
+                uint iRemainCount;
+                uint iBufCount = 500;
+                int i = 0;
+
+                // More info on Marshal class >> https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netframework-4.5.1
+                // More info on IntPtr >> https://docs.microsoft.com/en-us/dotnet/api/system.intptr?view=netframework-4.5.1
+
+                // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
+                IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
+
+                iReturn = Uts2Open(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Open port error-" + iReturn.ToString("X2"));
+
+
+                //iReturn = Uts1Abort(bytePort);
+                //if (iReturn != 0)
+                //    throw new Exception("Abort port error-" + iReturn.ToString("X2"));
+
+                iReturn = Uts2StartContinuousRead(bytePort);
+                if (iReturn != 0)        // There is an error, but keep going.
+                    throw new Exception("Continuous Read error-" + iReturn.ToString("X2"));
+
+
+                while (b1True)
+                {
+                    iReturn = Uts2GetContinuousReadResult(bytePort, (void*)uiiBuf, iBufCount, out iReadCount);
+
+                    if (iReturn == 1)
+                    {
+                        iRemainCount = 1;
+                        continue;
+                    }
+
+                    for (i = 0; i < iReadCount; i++)
+                    {
+                        TagArgs e = new TagArgs();
+
+                        // IntPtr to Structure >> https://stackoverflow.com/a/27680642/770989
+                        ud = (UiiData)Marshal.PtrToStructure(uiiBuf + (sizeof(UiiData) * i), typeof(UiiData));
+                        //                            ud = (UiiData)Marshal.PtrToStructure((IntPtr)((uint)uiiBuf + (sizeof(UiiData) * i)), typeof(UiiData));
+
+                        // More info on fixed >> https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/fixed-statement
+                        // Reference from here >> https://docs.microsoft.com/en-us/dotnet/csharp/misc/cs1666
+                        // If we do not use fixed, it will throw CS1666 error.
+                        fixed (UiiData* uf = &ud)
+                        {
+                            byte[] bUii = new byte[uf->length];
+
+
+                            // How to get IntPtr from byte[] >> https://stackoverflow.com/questions/537573/how-to-get-intptr-from-byte-in-c-sharp
+                            // Another example >> https://stackoverflow.com/a/27680642/770989
+                            Marshal.Copy((IntPtr)uf->uii, bUii, 0, (int)uf->length);
+
+                            e.Uii = BitConverter.ToString(bUii).Replace("-", "");
+                        }
+
+                        //if (!OnTagRead.Equals(null))
+                        OnTagRead(this, e);
+                    }
+                }
+
+                iReturn = Uts2StopContinuousRead(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Stop Continuous Read error-" + iReturn.ToString("X2"));
+
+                iReturn = Uts2Close(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Close port error-" + iReturn.ToString("X2"));
+            }
+            catch (ThreadAbortException)
+            {
+                Uts2Close(bytePort);
+            }
+            catch (Exception e)
+            {
+                ErrMsg errMsg = new ErrMsg();
+                errMsg.StatusMsg = "Error: An error occured while running UR21 Api.";
+                errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
+                Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+            }
+        }
     }
 }

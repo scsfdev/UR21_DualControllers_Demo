@@ -10,11 +10,29 @@ using GalaSoft.MvvmLight.Command;
 
 namespace UR21_DualControllers_Demo.ViewModel
 {
-    // TODO: 1. Need to add functions to export scan data to CSV.
-    // TODO: 2. Need to add functions for Controller 1 + 2 --> Start, Stop, Clear, Export.
+
     // TODO: 3. Need to check do I need to use 3 different Thread instead of just T1 based on Controller Number when more than one controller is used at the same time.
-    // TODO: 4. Need to check will it affect starting, reading, reflecting data, stopping of UR21 when more than one controller is used at the same time. 
+    // TODO: 4. Need to check will it affect starting, reading, displaying data, stopping of UR21 when more than one controller is used at the same time. 
+
+
+
+    // Finished.
+    // TODO: 1. Need to add functions to export scan data to CSV.
+    //          Export - Finish.
+    // TODO: 2. Need to add functions for Controller 1 + 2 --> Start, Stop, Clear.
+    //          Start / Stop / Clear - Finish.
     // TODO: 5. Need to update Power and Antenna value to INI file for both Controller 1 and Controller 2.
+    //          Now, it is using current defined power and antenan value - Finish.
+    // TODO: 6. Need to check power value is being utilize when start reading. --> SaveUr21Setting
+    //          Save ini file - Finish.
+
+    // Current action
+    // TODO: 7. Need to implements ReadUii, Continuous Read and Read Memory.
+    //          ReadUii - Finish.
+    //          ContinuousRead - Finish.
+    //          ReadFromMemory - Ongoing.
+
+
 
     public class MainViewModel : ViewModelBase
     {
@@ -96,6 +114,31 @@ namespace UR21_DualControllers_Demo.ViewModel
         }
 
 
+        private bool _readUii;
+        public bool ReadUii
+        {
+            get { return _readUii; }
+            set { Set(ref _readUii, value); }
+        }
+
+
+        private bool _readContinuous;
+        public bool ReadContinuous
+        {
+            get { return _readContinuous; }
+            set { Set(ref _readContinuous, value); }
+        }
+
+
+        private bool _readMemory;
+        public bool ReadMemory
+        {
+            get { return _readMemory; }
+            set { Set(ref _readMemory, value); }
+        }
+
+
+
         public ICommand CmdRfidAction { get; private set; }
 
         public MainViewModel(IDataService dataService)
@@ -117,6 +160,8 @@ namespace UR21_DualControllers_Demo.ViewModel
                 Messenger.Default.Send(new NotificationMessage(this, MyConst.EXIT));
 
             CmdRfidAction = new RelayCommand<object>(RfidAction);
+
+            ReadUii = true;
         }
 
         private void ExportReady(string data)
@@ -187,16 +232,27 @@ namespace UR21_DualControllers_Demo.ViewModel
             if (controllerNo == 1)
             {
                 parcels[0].Start = true;
+                parcels[0].ReadUii = _readUii;
+                parcels[0].ReadContinuous = _readContinuous;
+                parcels[0].ReadMemory = _readMemory;
+
                 C1Ready = false;
                 C1Started = true;
                 Messenger.Default.Send(parcels[0], MsgType.CONTROLLER_VM + controllerNo.ToString());
+                Messenger.Default.Send(false, MsgType.SETTING_VM + controllerNo.ToString());
             }
             else if (controllerNo == 2)
             {
                 parcels[1].Start = true;
+                parcels[0].ReadUii = _readUii;
+                parcels[0].ReadContinuous = _readContinuous;
+                parcels[0].ReadMemory = _readMemory;
+
                 C2Ready = false;
                 C2Started = true;
+                
                 Messenger.Default.Send(parcels[1], MsgType.CONTROLLER_VM + controllerNo.ToString());
+                Messenger.Default.Send(false, MsgType.SETTING_VM + controllerNo.ToString());
             }
             // TODO: Need to add for 1 + 2 start reading.
         }
@@ -208,6 +264,7 @@ namespace UR21_DualControllers_Demo.ViewModel
                 C1Ready = true;
                 C1Started = false;
                 parcels[0].Start = false;
+                Messenger.Default.Send(true, MsgType.SETTING_VM + controllerNo.ToString());
                 Messenger.Default.Send(parcels[0], MsgType.CONTROLLER_VM + controllerNo.ToString());
             }
             else if (controllerNo == 2)
@@ -215,6 +272,7 @@ namespace UR21_DualControllers_Demo.ViewModel
                 C2Ready = true;
                 C2Started = false;
                 parcels[1].Start = false;
+                Messenger.Default.Send(true, MsgType.SETTING_VM + controllerNo.ToString());
                 Messenger.Default.Send(parcels[1], MsgType.CONTROLLER_VM + controllerNo.ToString());
             }
             // TODO: Need to add for 1 + 2 stop reading.
@@ -235,7 +293,7 @@ namespace UR21_DualControllers_Demo.ViewModel
                 parcels[1].Start = true;
                 C2Ready = true;
                 C2Started = false;
-                Messenger.Default.Send(parcels[1], MsgType.CONTROLLER_VM + controllerNo.ToString());
+                Messenger.Default.Send(true, MsgType.CONTROLLER_VM + controllerNo.ToString());
                 ExportReady("2,F");
             }
             else
@@ -250,7 +308,7 @@ namespace UR21_DualControllers_Demo.ViewModel
 
         private void ExportScanData(int controllerNo)
         {
-
+            Messenger.Default.Send(controllerNo, MsgType.CONTROLLER_VM + controllerNo.ToString());
         }
 
 
@@ -303,6 +361,15 @@ namespace UR21_DualControllers_Demo.ViewModel
                 bool result = new MyHelper().UpdateSettingFile(xmlFile, parcel);
                 if (result)
                 {
+                    result = new MyHelper().UpdateIniFile(@"Controller" + parcel.No.ToString() + "\\RfidTsParam.ini", parcel);
+                    // TODO: Save Ini file.
+                    //foreach (ParcelSetting p in parcels)
+                    //{
+                    //    // Read controller Ini file.
+                    //    if (!LoadIniFile(@"Controller" + p.No.ToString() + "\\RfidTsParam.ini", p))
+                    //        return false;
+                    //}
+
                     LoadUr21Setting(true);
 
                     if (parcel.No == 1)
@@ -315,6 +382,8 @@ namespace UR21_DualControllers_Demo.ViewModel
                         Controller2Status = true;
                         C2Ready = true;
                     }
+
+                    ShowStatusMsg("Info: Successfully updated Controller " + parcel.No.ToString() + " parameters.");
                 }
             }
             catch (Exception e)
@@ -378,6 +447,7 @@ namespace UR21_DualControllers_Demo.ViewModel
                 foreach (ParcelSetting p in parcels)
                 {
                     Messenger.Default.Send(p, MsgType.SETTING_VM + p.No.ToString());
+                    Messenger.Default.Send(true, MsgType.SETTING_VM + p.No.ToString());
                 }
             }
 

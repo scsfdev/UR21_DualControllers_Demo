@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +33,34 @@ namespace UR21_DualControllers_Demo.Model
             }
         }
 
+        public bool UpdateIniFile(string iniFile, ParcelSetting p)
+        {
+            if (!File.Exists(iniFile))
+            {
+                throw new Exception("Controller ini setting file is missing");
+            }
+
+            try
+            {
+                string[] fileContents = File.ReadAllLines(iniFile);
+                for (int i = 0; i < fileContents.Length; i++)
+                {
+                    if (fileContents[i].ToUpper().Contains("CARRIER_POWER_DBM"))
+                        fileContents[i] = fileContents[i].Replace(fileContents[i].Substring(fileContents[i].IndexOf("=") + 1), p.Power.ToString());
+                    else if (fileContents[i].ToUpper().Contains("ANTENNA_PORT"))
+                        fileContents[i] = fileContents[i].Replace(fileContents[i].Substring(fileContents[i].IndexOf("=") + 1), "0x0000000" + p.Antenna.ToString());
+                }
+
+                File.WriteAllLines(iniFile, fileContents);
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+            return true;
+        }
+
         public bool UpdateSettingFile(string xmlFile, ParcelSetting parcel)
         {
             try
@@ -54,6 +83,30 @@ namespace UR21_DualControllers_Demo.Model
             catch (Exception e)
             {
                 throw new Exception(e.Message);
+            }
+        }
+
+        public void ExportToCSV(string strFileName, List<Tag> lst)
+        {
+            try
+            {
+                using (StreamWriter objWriter = new StreamWriter(strFileName, false))
+                {
+                    objWriter.AutoFlush = true;
+
+                    objWriter.WriteLine("No,UII");
+
+                    foreach (Tag t in lst)
+                        objWriter.WriteLine(t.No + "," + t.Uii);
+                }
+            }
+            catch (Exception e)
+            {
+                throw new Exception(e.Message);
+            }
+            finally
+            {
+                GC.Collect();
             }
         }
     }
