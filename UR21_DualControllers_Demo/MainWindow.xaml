@@ -22,6 +22,7 @@
             <design:IsEnabledConverter x:Key="multiConverter" />
             <design:Obj2Enable x:Key="TFConverter" />
             <design:Obj2Enable x:Key="TFConverterR" Reverse="True" />
+            <design:Bool2VisibleOrCollapsed x:Key="B2V" Collapse="True"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -38,7 +39,7 @@
         </Grid.RowDefinitions>
 
         <v:Controller Margin="10" Grid.Row="0" Grid.Column="0" DataContext="{Binding ControllerVM1,Source={StaticResource Locator}}"  />
-        <v:Controller Margin="10" Grid.Row="1" Grid.Column="0" DataContext="{Binding ControllerVM2,Source={StaticResource Locator}}"  />
+        <v:Controller Margin="10" Grid.Row="1" Grid.Column="0" DataContext="{Binding ControllerVM2,Source={StaticResource Locator}}" Visibility="{Binding TestVisible, Converter={StaticResource B2V}}"  />
 
         <StackPanel Orientation="Vertical" Grid.Row="0" Grid.Column="1" Margin="0,50,0,0">
             <RadioButton Content="Read Tag (ReadUii)" IsChecked="{Binding ReadUii}"/>
@@ -143,7 +144,7 @@
 
                         <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                             <Button Content="START" Style="{StaticResource BtnStyle}" HorizontalAlignment="Left" IsEnabled="{Binding C1Ready}"
-                                Command="{Binding CmdRfidAction}" CommandParameter="C1START" Margin="5"/>
+                                Command="{Binding CmdRfidAction}" CommandParameter="C1START" Margin="5" />
 
                             <Button Content="STOP" Style="{StaticResource BtnStyle}" HorizontalAlignment="Left" 
                                     IsEnabled="{Binding C1Started}"

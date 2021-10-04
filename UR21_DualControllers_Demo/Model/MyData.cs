@@ -31,6 +31,7 @@ namespace UR21_DualControllers_Demo.Model
         SETTING_VM,
         SETTING_VM1,
         SETTING_VM2,
+        CONTROLLER_VMV,
         CONTROLLER_VM,
         CONTROLLER_VM1,
         CONTROLLER_VM2,
@@ -158,6 +159,7 @@ namespace UR21_DualControllers_Demo.Model
 
     public class Tag
     {
+        public string Memory { get; set; }
         public string Uii { get; set; }
         public int No { get; set; }
         public int Qty { get; set; }
@@ -198,6 +200,13 @@ namespace UR21_DualControllers_Demo.Model
         {
             get { return uii; }
             set { uii = value; }
+        }
+
+        private string memory;
+        public string Memory
+        {
+            get { return memory; }
+            set { memory = value; }
         }
 
     }

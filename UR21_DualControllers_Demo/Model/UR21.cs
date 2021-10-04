@@ -526,12 +526,12 @@ namespace UR21_DualControllers_Demo.Model
 
             if (controllerNo == 1)
             {
-                t1 = new Thread(Read1Tag);
+                t1 = new Thread(Read1TagMemory);
                 t1.Start();
             }
             else
             {
-                t2 = new Thread(Read2Tag);
+                t2 = new Thread(Read2TagMemory);
                 t2.Start();
             }
             return true;
@@ -1023,6 +1023,127 @@ namespace UR21_DualControllers_Demo.Model
                 errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
                 Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
             }
+        }
+
+        private RESULTDATA rd = new RESULTDATA();
+
+        public void Read1TagMemory()
+        {
+            try
+            {
+                b1True = true;
+
+                uint iReturn;
+                uint iReadCount;
+                uint iRemainCount;
+                uint iBufCount = 500;
+                int i = 0;
+
+                // More info on Marshal class >> https://docs.microsoft.com/en-us/dotnet/api/system.runtime.interopservices.marshal?view=netframework-4.5.1
+                // More info on IntPtr >> https://docs.microsoft.com/en-us/dotnet/api/system.intptr?view=netframework-4.5.1
+
+                // More info on what is void* in C# >> https://stackoverflow.com/questions/15527985/what-is-void-in-c
+                IntPtr uiiBuf = Marshal.AllocHGlobal(sizeof(UiiData) * (int)iBufCount);
+
+                IntPtr readData = Marshal.AllocHGlobal(sizeof(RESULTDATA) * (int)iBufCount);
+
+
+                iReturn = Uts1Open(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Open port error-" + iReturn.ToString("X2"));
+
+
+                iReturn = Uts1Abort(bytePort);
+                if (iReturn != 0)
+                    throw new Exception("Abort port error-" + iReturn.ToString("X2"));
+
+                byte tagCmd = 0x02;
+                ushort uAntenna = 0x0000;
+                byte lstEnable = 0x01;
+
+                READPARAM rdParam = new READPARAM();
+                rdParam.bank = 0x03;
+                rdParam.reserved = 0x00;
+                rdParam.size = 32;
+                rdParam.ptr = 0;
+                string readPwd = "00000000";
+
+                for(int index=0; index < 4; index++)
+                {
+                    rdParam.accesspwd[index] = Convert.ToByte(readPwd.Substring(index * 2, 2), 16);
+                }
+
+                
+
+                while (b1True)
+                {
+                    iReturn = Uts1StartTagComm(bytePort, tagCmd, uAntenna, (void*)&rdParam, lstEnable, 0, null);
+                    if (iReturn != 0)        // There is an error, but keep going.
+                        continue;
+
+                    do
+                    {
+                        iReturn = Uts1GetTagCommResult(bytePort, (void*)readData, iBufCount, out iReadCount, out iRemainCount);
+
+                        if (iReturn == 1)
+                        {
+                            iRemainCount = 1;
+                            continue;
+                        }
+
+                        for (i = 0; i < iReadCount; i++)
+                        {
+                            TagArgs e = new TagArgs();
+
+                            // IntPtr to Structure >> https://stackoverflow.com/a/27680642/770989
+                            rd = (RESULTDATA)Marshal.PtrToStructure(readData + (sizeof(RESULTDATA) * i), typeof(RESULTDATA));
+                          //  rd = (RESULTDATA)Marshal.PtrToStructure((IntPtr)((uint)uiiBuf + (sizeof(RESULTDATA) * i)), typeof(RESULTDATA));
+
+                            // More info on fixed >> https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/keywords/fixed-statement
+                            // Reference from here >> https://docs.microsoft.com/en-us/dotnet/csharp/misc/cs1666
+                            // If we do not use fixed, it will throw CS1666 error.
+                            fixed (RESULTDATA* uf = &rd)
+                            {
+                                byte[] memory = new byte[uf->datalength];
+                                byte[] uii = new byte[uf->uiilength];
+
+                                // How to get IntPtr from byte[] >> https://stackoverflow.com/questions/537573/how-to-get-intptr-from-byte-in-c-sharp
+                                // Another example >> https://stackoverflow.com/a/27680642/770989
+                                Marshal.Copy((IntPtr)uf->data, memory, 0, (int)uf->datalength);
+                                Marshal.Copy((IntPtr)uf->uii, uii, 0, (int)uf->uiilength);
+
+                                e.Uii = BitConverter.ToString(uii).Replace("-", "");
+                                e.Memory = BitConverter.ToString(memory).Replace("-", "");
+                            }
+
+                            //if (!OnTagRead.Equals(null))
+                            OnTagRead(this, e);
+
+                        }
+                    }
+                    while ((iRemainCount > 0) && b1True);
+                }
+
+                iReturn = Uts1Close(bytePort);
+                if (iReturn > 0)
+                    throw new Exception("Close port error-" + iReturn.ToString("X2"));
+            }
+            catch (ThreadAbortException)
+            {
+                Uts1Close(bytePort);
+            }
+            catch (Exception e)
+            {
+                ErrMsg errMsg = new ErrMsg();
+                errMsg.StatusMsg = "Error: An error occured while running UR21 Api.";
+                errMsg.BoxMsg = "An error occured while running UR2x Api!" + Environment.NewLine + "Details: " + e.Message;
+                Messenger.Default.Send(errMsg, MsgType.MAIN_VM);
+            }
+        }
+
+        public void Read2TagMemory()
+        {
+
         }
     }
 }

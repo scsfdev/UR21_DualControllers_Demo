@@ -10,7 +10,7 @@ using GalaSoft.MvvmLight.Command;
 
 namespace UR21_DualControllers_Demo.ViewModel
 {
-
+    // Below TODO 3 and 4 can only be tested with two Controllers at the same time. Need to go office and check it out.
     // TODO: 3. Need to check do I need to use 3 different Thread instead of just T1 based on Controller Number when more than one controller is used at the same time.
     // TODO: 4. Need to check will it affect starting, reading, displaying data, stopping of UR21 when more than one controller is used at the same time. 
 
@@ -25,17 +25,27 @@ namespace UR21_DualControllers_Demo.ViewModel
     //          Now, it is using current defined power and antenan value - Finish.
     // TODO: 6. Need to check power value is being utilize when start reading. --> SaveUr21Setting
     //          Save ini file - Finish.
-
-    // Current action
     // TODO: 7. Need to implements ReadUii, Continuous Read and Read Memory.
     //          ReadUii - Finish.
     //          ContinuousRead - Finish.
-    //          ReadFromMemory - Ongoing.
+    //          ReadFromMemory - Finish.
+    
+    // Current action
+
 
 
 
     public class MainViewModel : ViewModelBase
     {
+        private bool _TestVisible;
+
+        public bool TestVisible
+        {
+            get { return _TestVisible; }
+            set { Set(ref _TestVisible, value); }
+        }
+
+
         DispatcherTimer msgTimer = new DispatcherTimer();
 
         List<ParcelSetting> parcels = new List<ParcelSetting>();
@@ -134,7 +144,11 @@ namespace UR21_DualControllers_Demo.ViewModel
         public bool ReadMemory
         {
             get { return _readMemory; }
-            set { Set(ref _readMemory, value); }
+            set {
+                Set(ref _readMemory, value);
+                Messenger.Default.Send(value, MsgType.CONTROLLER_VMV);
+
+            }
         }
 
 
@@ -162,6 +176,8 @@ namespace UR21_DualControllers_Demo.ViewModel
             CmdRfidAction = new RelayCommand<object>(RfidAction);
 
             ReadUii = true;
+
+            TestVisible = false;
         }
 
         private void ExportReady(string data)

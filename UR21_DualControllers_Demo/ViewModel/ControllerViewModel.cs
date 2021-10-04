@@ -23,7 +23,7 @@ namespace UR21_DualControllers_Demo.ViewModel
         {
             Messenger.Default.Register<ParcelSetting>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), RfidAction);
             Messenger.Default.Register<bool>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), ClearList);
-            Messenger.Default.Register<int>(this, MsgType.CONTROLLER_VM + controllerNo.ToString(), ExportList);
+            
 
             ur = new Ur21();
             ur.OnTagRead += Ur_OnTagRead;
@@ -31,6 +31,8 @@ namespace UR21_DualControllers_Demo.ViewModel
             ControllerNo = "Controller " + controllerNo + " scan data";
             this.controllerNo = controllerNo;
         }
+
+      
 
         private void ExportList(int controllerNo)
         {
@@ -113,6 +115,7 @@ namespace UR21_DualControllers_Demo.ViewModel
 
                         Tag t = new Tag();
                         t.Uii = e.Uii;
+                        t.Memory = e.Memory;
                         t.No = iCount;
                         t.Qty = iQty;
                         t.ReadDate = DateTime.Now.ToString("yyyy-MM-dd");
@@ -131,6 +134,8 @@ namespace UR21_DualControllers_Demo.ViewModel
             get { return _controllerNo; }
             set { Set(ref _controllerNo, value); }
         }
+
+
 
 
         private ObservableCollection<Tag> tagList;

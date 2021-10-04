@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:UR21_DualControllers_Demo.View"
+             
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="300">
 
@@ -12,6 +13,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="../Skins/MainSkin.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -29,7 +31,10 @@
                                     HeaderStyle="{StaticResource DGCHeaderStyle}" ElementStyle="{StaticResource DGCElementStyle}"/>
                 <DataGridTextColumn IsReadOnly="True" Header="Tag Data (UII)" MinWidth="50" Binding="{Binding Uii}" Width="250"
                                     HeaderStyle="{StaticResource DGCHeaderStyle}" ElementStyle="{StaticResource DGCElementStyle}"/>
-                <DataGridTextColumn IsReadOnly="True" Header="Read" MinWidth="50" Binding="{Binding Qty}" Width="80" Visibility="Collapsed"
+                <DataGridTextColumn IsReadOnly="True" Header="Tag Data (Memory)" MinWidth="50" Binding="{Binding Memory}" Width="250" 
+                                    x:Name="MemoryCol"
+                                    HeaderStyle="{StaticResource DGCHeaderStyle}" ElementStyle="{StaticResource DGCElementStyle}"/>
+                <DataGridTextColumn  IsReadOnly="True" Header="Read" MinWidth="50" Binding="{Binding Qty}" Width="80" Visibility="Collapsed"
                                     HeaderStyle="{StaticResource DGCHeaderStyle}" ElementStyle="{StaticResource DGCElementStyle}"/>
             </DataGrid.Columns>
         </DataGrid>
