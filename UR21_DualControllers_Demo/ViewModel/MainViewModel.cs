@@ -260,9 +260,9 @@ namespace UR21_DualControllers_Demo.ViewModel
             else if (controllerNo == 2)
             {
                 parcels[1].Start = true;
-                parcels[0].ReadUii = _readUii;
-                parcels[0].ReadContinuous = _readContinuous;
-                parcels[0].ReadMemory = _readMemory;
+                parcels[1].ReadUii = _readUii;
+                parcels[1].ReadContinuous = _readContinuous;
+                parcels[1].ReadMemory = _readMemory;
 
                 C2Ready = false;
                 C2Started = true;
