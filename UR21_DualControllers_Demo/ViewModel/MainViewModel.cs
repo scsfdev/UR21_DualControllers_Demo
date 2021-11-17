@@ -10,7 +10,6 @@ using GalaSoft.MvvmLight.Command;
 
 namespace UR21_DualControllers_Demo.ViewModel
 {
-    // Below TODO 3 and 4 can only be tested with two Controllers at the same time. Need to go office and check it out.
     // TODO: 3. Need to check do I need to use 3 different Thread instead of just T1 based on Controller Number when more than one controller is used at the same time.
     // TODO: 4. Need to check will it affect starting, reading, displaying data, stopping of UR21 when more than one controller is used at the same time. 
 
