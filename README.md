@@ -1,4 +1,4 @@
-# UR21_DualControllers_Demo
+# UR21 DualControllers Demo
 
 This demo is created by using Visual Studio 2015 Community Edition.
 
